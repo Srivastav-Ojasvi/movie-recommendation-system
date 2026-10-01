@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Datasets
+data/ratings.csv
+
+# Environment / secrets
+.env
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/

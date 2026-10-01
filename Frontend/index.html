@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineMatch | Content-Based Movie Recommendation System</title>
+  <meta name="description" content="A content-based movie recommendation system powered by TF-IDF and Nearest Neighbors." />
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Background Ambient Glow Accents -->
+  <div class="ambient-glow glow-top" aria-hidden="true"></div>
+  <div class="ambient-glow glow-bottom" aria-hidden="true"></div>
+
+  <!-- Navbar -->
+  <header class="navbar-wrapper">
+    <nav class="navbar container">
+      <a href="#home" class="brand-logo">
+        <span class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+            <line x1="7" y1="2" x2="7" y2="22"></line>
+            <line x1="17" y1="2" x2="17" y2="22"></line>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <line x1="2" y1="7" x2="7" y2="7"></line>
+            <line x1="2" y1="17" x2="7" y2="17"></line>
+            <line x1="17" y1="17" x2="22" y2="17"></line>
+            <line x1="17" y1="7" x2="22" y2="7"></line>
+          </svg>
+        </span>
+        <span class="logo-text">Cine<span>Match</span></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#home" class="nav-link active">Home</a></li>
+        <li><a href="#discover" class="nav-link">Discover</a></li>
+        <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero / Search Section -->
+    <section id="home" class="hero-section container">
+      <div class="hero-content">
+        <span class="badge">Machine Learning Recommendation Engine</span>
+        <h1 class="hero-title">Find Your Next <br /><span class="gradient-text">Favorite Movie.</span></h1>
+        <p class="hero-description">
+          CineMatch analyzes genre similarities across cinematic catalogs to recommend films that closely match your personal taste.
+        </p>
+
+        <!-- Search Input Bar -->
+        <div class="search-box">
+          <div class="input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input 
+              type="text" 
+              id="movie-input" 
+              placeholder="Search for a movie (e.g., Toy Story (1995))..." 
+              autocomplete="off"
+            />
+            <button type="button" id="clear-btn" class="clear-btn" aria-label="Clear search input" hidden>&times;</button>
+          </div>
+          <button id="recommend-btn" class="btn-primary">
+            <span class="btn-text">Recommend</span>
+            <span class="btn-loader" hidden></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recommendations Section -->
+    <section id="discover" class="recommendations-section container">
+      <div class="section-header">
+        <h2 class="section-title">Recommended For You</h2>
+        <p id="results-meta" class="results-meta" hidden></p>
+      </div>
+
+      <!-- State: Initial Empty State -->
+      <div id="state-empty" class="status-card">
+        <div class="status-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+        </div>
+        <h3>No recommendations yet</h3>
+        <p>Type a movie title into the search bar above and click "Recommend" to explore similar titles.</p>
+      </div>
+
+      <!-- State: Loading Spinner -->
+      <div id="state-loading" class="status-card" hidden>
+        <div class="spinner"></div>
+        <h3>Computing Similarities...</h3>
+        <p>Analyzing genre vectors using cosine distance.</p>
+      </div>
+
+      <!-- State: Error Box -->
+      <div id="state-error" class="status-card status-card-error" hidden>
+        <div class="status-icon error-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3 id="error-title">Unable to find recommendations</h3>
+        <p id="error-message">Movie not found in the dataset. Please verify the title and spelling.</p>
+      </div>
+
+      <!-- Grid for Rendered Movie Cards -->
+      <div id="recommendations-grid" class="movie-grid" hidden></div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="pipeline-section container">
+      <div class="section-header">
+        <span class="badge">Pipeline Architecture</span>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">A content-based filtering pipeline that evaluates similarity through vector representations.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <h3 class="step-title">Choose a movie</h3>
+          <p class="step-text">Enter a movie you like into the search system to use as the query reference.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <h3 class="step-title">Analyze its genres</h3>
+          <p class="step-text">CineMatch converts movie genre information into high-dimensional numerical features using TF-IDF.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <h3 class="step-title">Find similar movies</h3>
+          <p class="step-text">A Nearest Neighbors model using cosine distance identifies movies with similar genre profiles.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">04</div>
+          <h3 class="step-title">Get recommendations</h3>
+          <p class="step-text">The top ranking, most mathematically similar movies are displayed on your screen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section container">
+      <div class="about-card">
+        <div class="about-text">
+          <span class="badge">BTech Computer Science Project</span>
+          <h2 class="section-title">About CineMatch</h2>
+          <p>
+            CineMatch is an end-to-end content-based movie recommendation system developed for a BTech Computer Science capstone. It combines information retrieval techniques with machine learning algorithms to solve the cold-start and item recommendation problem.
+          </p>
+          <div class="tech-tags">
+            <span class="tech-tag">Python</span>
+            <span class="tech-tag">Pandas</span>
+            <span class="tech-tag">Scikit-learn</span>
+            <span class="tech-tag">TF-IDF Vectorization</span>
+            <span class="tech-tag">Nearest Neighbors</span>
+            <span class="tech-tag">Flask REST API</span>
+            <span class="tech-tag">Vanilla JS</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-content">
+      <p class="footer-brand">CineMatch &copy; BTech Final Year Project</p>
+      <p class="footer-note">Content-based recommendation powered by Scikit-Learn and Flask</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
