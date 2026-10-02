@@ -1,11 +1,10 @@
 /**
  * CineMatch - Frontend Controller
- * Communicates with Flask ML backend running at http://127.0.0.1:5000
+ * Communicates with Flask ML backend running at [http://127.0.0.1:5000](http://127.0.0.1:5000)
  */
 
 // Base endpoint of your Flask API
 const API_BASE_URL = 'http://127.0.0.1:5000/recommend';
-
 // DOM Elements
 const movieInput = document.getElementById('movie-input');
 const recommendBtn = document.getElementById('recommend-btn');
@@ -24,7 +23,6 @@ const resultsMeta = document.getElementById('results-meta');
 
 // Track state visibility helper
 function setViewState(state) {
-  // Hide all sections first
   stateEmpty.hidden = true;
   stateLoading.hidden = true;
   stateError.hidden = true;
@@ -89,9 +87,13 @@ async function fetchRecommendations() {
     // 4. Handle HTTP failure codes (e.g. 404, 500)
     if (!response.ok) {
       if (response.status === 404) {
-        throw new Error(`The movie "${query}" was not found in the database. Please check spelling or try another title.`);
+        throw new Error(
+          `The movie "${query}" was not found in the database. Please check spelling or try another title.`
+        );
       } else {
-        throw new Error(`Server returned status ${response.status}. Please check your backend logs.`);
+        throw new Error(
+          `Server returned status ${response.status}. Please check your backend logs.`
+        );
       }
     }
 
@@ -114,11 +116,10 @@ async function fetchRecommendations() {
     document.getElementById('discover').scrollIntoView({ behavior: 'smooth' });
 
   } catch (err) {
-    // Graceful error handling for offline Flask or network issues
     if (err.name === 'TypeError' && err.message.includes('fetch')) {
       showError(
         'Backend Connection Failed',
-        'Could not reach Flask backend at http://127.0.0.1:5000. Ensure app.py is running and CORS is enabled if accessed on a different port.'
+        'Could not reach Flask backend at [http://127.0.0.1:5000](http://127.0.0.1:5000). Ensure app.py is running and CORS is enabled.'
       );
     } else {
       showError('Recommendation Error', err.message);
@@ -134,20 +135,21 @@ function renderRecommendations(searchedMovie, recommendations) {
   resultsMeta.innerHTML = `Showing ${recommendations.length} recommendations similar to: <strong>${escapeHtml(searchedMovie)}</strong>`;
 
   recommendations.forEach((item, index) => {
-    // Gracefully handle if recommendation is a string or an object with title & genre
+    // Supports either plain string array ["Toy Story", ...] or object array [{ title, genre, poster_url }, ...]
     const movieTitle = typeof item === 'string' ? item : (item.title || 'Unknown Title');
     const movieGenre = typeof item === 'object' && item.genre ? item.genre : null;
+    const posterUrl = typeof item === 'object' && item.poster_url ? item.poster_url : null;
 
     const card = document.createElement('article');
     card.className = 'movie-card';
     card.style.animationDelay = `${index * 0.08}s`;
 
-    card.innerHTML = `
-      <div class="movie-poster-placeholder">
+    const posterMarkup = posterUrl
+      ? `<img src="${posterUrl}" alt="${escapeHtml(movieTitle)} poster" class="movie-poster-image" loading="lazy" />`
+      : `
         <svg class="poster-watermark" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
         </svg>
-        <span class="poster-badge">Match #${index + 1}</span>
         <svg class="poster-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
           <line x1="7" y1="2" x2="7" y2="22"></line>
@@ -158,6 +160,12 @@ function renderRecommendations(searchedMovie, recommendations) {
           <line x1="17" y1="17" x2="22" y2="17"></line>
           <line x1="17" y1="7" x2="22" y2="7"></line>
         </svg>
+      `;
+
+    card.innerHTML = `
+      <div class="movie-poster-placeholder">
+        ${posterMarkup}
+        <span class="poster-badge">Match #${index + 1}</span>
       </div>
       <div class="movie-card-info">
         <h3 class="movie-card-title">${escapeHtml(movieTitle)}</h3>

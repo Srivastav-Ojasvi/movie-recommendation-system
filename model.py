@@ -52,9 +52,8 @@ def recommend(movie_title, n=5):
         n_neighbors=n + 1
     )
 
-    recommended_movies = movies.iloc[indices[0][1:]]["title"].tolist()
-
-    return recommended_movies
+    recommended_movies = movies.iloc[indices[0][1:]][["title", "tmdbId"]]
+    return recommended_movies.to_dict(orient="records")
 
 
 print(recommend("Toy Story (1995)"))
